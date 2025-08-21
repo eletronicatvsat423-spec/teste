@@ -1,0 +1,51 @@
+import streamlit as st
+import json
+import os
+
+ARQUIVO = "contas.json"
+
+# Funções de armazenamento
+def carregar_dados():
+    if os.path.exists(ARQUIVO):
+        with open(ARQUIVO, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {"pagar": [], "receber": []}
+
+def salvar_dados(dados):
+    with open(ARQUIVO, "w", encoding="utf-8") as f:
+        json.dump(dados, f, indent=4, ensure_ascii=False)
+
+# Interface com Streamlit
+st.set_page_config(page_title="Controle de Contas", layout="centered")
+st.title("📊 Controle de Contas")
+
+# Formulário de cadastro
+with st.form("cadastro"):
+    st.subheader("Adicionar Conta")
+    descricao = st.text_input("Descrição")
+    valor = st.number_input("Valor", min_value=0.0, step=0.01)
+    vencimento = st.date_input("Vencimento")
+    tipo = st.radio("Tipo de Conta", ["pagar", "receber"])
+    submit = st.form_submit_button("Adicionar")
+
+    if submit:
+        dados = carregar_dados()
+        conta = {"descricao": descricao, "valor": valor, "vencimento": str(vencimento)}
+        dados[tipo].append(conta)
+        salvar_dados(dados)
+        st.success(f"Conta adicionada em {tipo} com sucesso!")
+
+# Exibição das listas
+dados = carregar_dados()
+
+st.subheader("📌 Contas a Pagar")
+if dados["pagar"]:
+    st.table(dados["pagar"])
+else:
+    st.info("Nenhuma conta a pagar.")
+
+st.subheader("📌 Contas a Receber")
+if dados["receber"]:
+    st.table(dados["receber"])
+else:
+    st.info("Nenhuma conta a receber.")
